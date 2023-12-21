@@ -1,0 +1,356 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: header"/>
+<link href="/css/custom.css" rel="stylesheet">
+
+<body class="d-flex flex-column h-100 min-vh-100">
+
+<div th:replace="fragments/bodyHeader :: bodyHeader"/>
+<!-- Begin page content -->
+<main class="flex-shrink-0">
+    <div class="container mt-5 mb-5">
+        <h4 class="mb-3">글 보기</h4>
+        <!--게시글-->
+        <div>
+            <table class="table table-striped">
+                <tbody>
+                <input type="hidden" id="postId" name="postId" th:value="${post.id}">
+                <tr>
+                    <th>제목</th>
+                    <td th:text="${post.title}"></td>
+                </tr>
+
+                <tr>
+                    <th>작성자</th>
+                    <td th:text="${post.name}"></td>
+                </tr>
+                <tr>
+                    <th>작성일</th>
+                    <td th:text="${#strings.substring(post.createdTime, 0, 10)}"></td>
+                </tr>
+                <tr>
+                    <th>내용</th>
+                    <td style="height: 500px; width: 80%;">
+                        <div class="textarea-space" th:text="${post.content}"></div>
+                    </td>
+                </tr>
+                </tbody>
+
+            </table>
+            <!--            <output class="mb-4">-->
+            <!--                <div class="image" th:each="imageFile, i : ${post.getAttachList()}" >-->
+            <!--                    <img th:src="|/images/${imageFile.storedFileName}|" width="150" height="150"/>-->
+            <!--                </div>-->
+            <!--            </output>-->
+            <!-- 수정, 목록, 삭제 -->
+            <div class="d-flex">
+                <p>
+                    <a class="btn btn-sm btn-dark mr-1" th:href="@{/post/list}">전체글</a>
+                </p>
+                <p th:if="${#strings.equals(post.member.id,session.loginMember.id)}">
+                    <a class="btn btn-sm btn-primary" th:href="@{/post/{postId}/modify(postId=${post.id})}" >수정</a>
+                    <a class="btn btn-sm btn-danger" href="#" th:onclick="'javascript:deletePost('+${post.id}+')'" >삭제</a>
+                </p>
+            </div>
+            <!-- /수정, 목록, 삭제-->
+        </div>
+        <!--댓글-->
+        <div class="card mb-2 mt-5 mb-5">
+            <div class="card-header bg-light">
+                <i class="fa fa-comment fa"></i> 댓글 작성
+            </div>
+            <form th:object="${replyForm}" id="rFrm" name="rFrm" method="post">
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <p th:text="${member.name}"></p>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <input type="hidden" id="memberId" name="memberId" th:value="${member.id}">
+                            <textarea class="form-control" id="reply-content" rows="2" style="display:inline-flex;width: 88%" th:field="*{content}" data-name="댓글 내용을"></textarea>
+                            <button id="reply-btn-save" type="button" onclick="saveReply()" class="btn btn-success" style="vertical-align: top;">등록</button>
+                        </li>
+                    </ul>
+                </div>
+            </form>
+        </div>
+        <div id="replyArea">
+        </div>
+        <div id="replyPageArea">
+        </div>
+        <!-- /댓글  -->
+    </div> <!-- /container -->
+    </div>
+</main>
+
+<div th:replace="fragments/footer :: footer"/>
+</body>
+
+<script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.min.js"></script>
+<script th:inline="javascript">
+
+    /*<![CDATA[*/
+    var postId = /*[[__${postId}__]]*/;
+    var memberId = $("#memberId").val();
+
+    //글 삭제
+    function deletePost(id) {
+        if(confirm("삭제하시겠습니까?")){
+            var form = document.createElement("form");
+
+            form.setAttribute("method", "post");
+            form.setAttribute("action", "/post/"+id+"/delete");
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+
+    //댓글등록
+    function saveReply(){
+        var form = document.getElementById("rFrm");
+        var isRight = true;
+
+        $("#rFrm").find("input,textarea").each(function(index, item){
+            // 아무값 없이 띄어쓰기만 있을 때도 빈 값으로 체크되도록 trim() 함수 호출
+            if ($(this).val().trim() == '') {
+                alert($(this).attr("data-name")+" 입력하세요.");
+                $(this).focus();
+                isRight = false;
+                return false;
+            }
+        });
+
+        if (!isRight) {
+            return;
+        }else{ //댓글 저장 실행
+
+
+            var content = $("#reply-content").val();
+
+            console.log("reply save memberId" + memberId);
+            console.log("reply save content" + content);
+            console.log("reply save postId" + postId);
+
+            const data = {
+                "memberId": memberId,
+                "postId": postId,
+                "content": content
+            };
+
+            $.ajax({
+                url: "/reply/save",
+                type: "POST",
+                dataType: "json", //ajax -> controller
+                contentType: "application/json; charset=utf-8", // controller -> ajax
+                data: JSON.stringify(data), // 넘길 값
+                success: function (result) {
+                    $("#reply-content").val('');
+                    viewReply(1);
+                },
+                error: function () {
+                    console.log("error");
+                }
+            });
+        }
+    }
+
+    //댓글수정
+    function replyUpdate(replyId){
+        var content = $("#modifyReplyContent"+replyId).val();
+        if (content.trim() == '') {
+            alert("댓글 내용을 입력하세요.");
+            $("#modifyReplyContent"+replyId).focus();
+            return false;
+        }
+
+        const data = {
+            "replyId": replyId,
+            "postId": postId,
+            "content": content
+        };
+
+        $.ajax({
+            url: "/reply/"+replyId+"/modify",
+            type: "POST",
+            dataType: "json", //ajax -> controller
+            contentType: "application/json; charset=utf-8", // controller -> ajax
+            data: JSON.stringify(data), // 넘길 값
+            success: function (result) {
+                $('#modifyReplyContent'+result[0].replyId).replaceWith('<textarea class="form-control mr-1 textarea-space" id="replyContent'+result[0].replyId+'" name="replyContent" [#th:text="'+result[0].content+'"]  disabled>'+result[0].content+'</textarea>');
+                $('#replyModifyButton'+result[0].replyId).replaceWith('<button class="badge btn-warning mr-1" type="button" id="replyModifyButton'+result[0].replyId+'" name="replyModifyButton" onclick="javascript:showDiv('+result[0].replyId+')" style="vertical-align: top;">수정</button>');
+
+            },
+            error: function () {
+                alert("error");
+            }
+        });
+    }
+
+    //댓글삭제
+    function deleteReply(replyId) {
+        console.log("deleteReply replyId" + replyId);
+
+        var replyPage = $("#replyPage").html(); //댓글페이지번호 가져오기
+
+        if(confirm("삭제하시겠습니까?")){
+
+            const data = {
+                "replyId": replyId,
+                "postId": postId,
+                "replyPage": replyPage,
+                "memberId" : memberId
+            };
+
+            $.ajax({
+                url: "/reply/delete",
+                type: "POST",
+                dataType: "json", //ajax -> controller
+                contentType: "application/json; charset=utf-8", // controller -> ajax
+                data: JSON.stringify(data), // 넘길 값
+                success: function (result) {
+
+                    //댓글 삭제하고 현재페이지가 없어지면 이전 페이지로 옮기기
+                    if(result.replyCnt % 5 == 0){
+                        viewReply(replyPage-1);
+                    }else{
+                        viewReply(replyPage);
+                    }
+                },
+                error: function () {
+                    alert("error");
+                }
+            });
+        }
+    }
+
+    $(document).ready(function(){
+        var paging = /*[[${paging.numberOfElements}]]*/
+        if(paging>0){ //댓글이 있다면 1페이지 댓글 목록을 불러온다
+            viewReply(1);
+        }
+
+    });
+
+    function showDiv(replyId){
+        console.log("showDiv reply Id"+replyId);
+        $('#replyContent'+replyId).contents().unwrap().wrap('<textarea class="form-control" style="display:inline-flex;width: 88%" id="modifyReplyContent' + replyId + '" name="modifyReplyContent" data-name="댓글 내용을"></textarea>' );
+        $('#replyModifyButton'+replyId).contents().unwrap().wrap('<button type="button" class="badge btn-primary mr-1" style="vertical-align: top;" id="replyModifyButton' + replyId + '" onclick="replyUpdate(' + replyId + ')"></button>');
+    }
+
+    $("textarea").each(function(textarea) {
+        $(this).height( $(this)[0].scrollHeight );
+    });
+
+    //댓글페이지 이동
+    function viewReply(replyPage){
+
+        const data = {
+            "replyPage" : replyPage
+        };
+
+        $.ajax({
+            url: "/post/"+postId+"/reply",
+            type: "POST",
+            dataType: "json", //ajax -> controller
+            contentType: "application/json; charset=utf-8", // controller -> ajax
+            data: JSON.stringify(data), // 넘길 값
+            success: function (result) {
+
+                $("#replyArea").empty();
+                $("#replyPageArea").empty(); //하위 태그는 남아있다
+
+                var html = "";
+                var pageHtml = "";
+                if(result[0].total > 0){
+                    html += '<div class=\"card\" >';
+                    html += '   <div class=\"card-header\">댓글(<span id=\"replyCnt\">'+result[0].total+'</span>)</div>';
+
+                    for(var i=1; i< result.length; i++){
+                        html += showReplyList(result[i].name, result[i].writeTime, result[i].replyId, result[i].memberId, result[i].content);
+                    }
+                    pageHtml = showReplyPage(result[0].pageNum, result[0].prev, result[0].next, result[0].realEndPage, result[0].startPage, result[0].maxPage);
+                }
+                $("#replyArea").append(html);
+                $("#replyPageArea").append(pageHtml);
+
+            },
+            error: function () {
+                alert("error");
+            }
+        });
+
+    }
+    function showReplyList(userName, wdate, replyId, memberId, content){
+        var loginMemberId = /*[[${session.loginMember.id}]]*/;
+        console.log("memberId" + memberId);
+        console.log("loginMemberId" + loginMemberId);
+        console.log("replyId for modify check" + replyId);
+
+        //댓글추가 html
+        var html = "";
+        html += '<ul id=\"replyBox--'+replyId+'\" class=\"list-group list-group-flush\" >' ;
+        html += '    <li class=\"list-group-item d-flex justify-content-end\">' ;
+        html += '        <div class=\"d-flex\">' ;
+        html += '            <span class=\"text-monospace mr-1\">작성자: </span>' ;
+        html += '            <div class=\"text-monospace mr-1\" >'+userName+'</div>';
+        html += '            <span class=\"mr-1\"> | </span>' ;
+        html += '            <div class=\"text-monospace mr-1\">'+wdate+'</div>' ;
+        html += '        </div>' ;
+        html += '    </li>' ;
+        html += '    <li id=\"replyModi--'+replyId+'\" class=\"list-group-item d-flex justify-content-between\">' ;
+        html += '        <textarea class="form-control mr-1 textarea-space" id=\"replyContent'+replyId+'\" name=\"replyContent\" disabled>'+content+'</textarea>';
+        html += '        <div class=\"d-flex align-items-center\">' ;
+        if(memberId == loginMemberId){
+            html += '            <button class=\"badge btn-warning mr-1\" type=\"button\" id=\"replyModifyButton'+replyId+'\" name=\"replyModifyButton\" onclick=\"javascript:showDiv('+replyId+')\" style=\"vertical-align: top;\">수정</button>';
+            html += '            <button class=\"badge btn-danger\" type=\"button\" onclick=\"javascript:deleteReply('+replyId+')\">삭제</button>' ;
+        }
+        html += '        </div>' ;
+        html += '    </li>';
+        html += '</ul>';
+        return html;
+    }
+
+    function showReplyPage(pageNum,prev,next,realEndPage,startPage,maxPage){
+        var pageHtml = "";
+        pageHtml +='<div>';
+        pageHtml +='    <ul class="pagination pagination justify-content-center">' ;
+        if(prev){
+            pageHtml +='        <li class=\"page-item\">' ;
+            pageHtml +='            <a class=\"page-link\" onclick=\"viewReply(1)\" >&lt;&lt;</a></li>' ;
+            pageHtml +='        </li>' ;
+            pageHtml +='        <li class=\"page-item\">' ;
+            pageHtml +='            <a class=\"page-link\" onclick=\"viewReply('+(startPage-maxPage)+')\" >&lt;</a>' ;
+            pageHtml +='        </li>' ;
+        }
+        for(var i=1; i<= realEndPage; i++){
+            //현재 페이지 class, id 추가
+            if(pageNum == i) {
+                pageHtml +='<li class=\"page-item active\">' ;
+            }else{
+                pageHtml +='<li class=\"page-item\">' ;
+            }
+            if(pageNum == i) {
+                pageHtml +='    <a class=\"page-link\" id=\"replyPage\" onclick=\"javascript:viewReply('+i+')\" >'+i+'</a>' ;
+            }else{
+                pageHtml +='    <a class=\"page-link\" onclick=\"javascript:viewReply('+i+')\" >'+i+'</a>' ;
+            }
+            pageHtml +='</li>' ;
+        }
+        if(next) {
+            pageHtml += '        <li class=\"page-item\" >';
+            pageHtml += '            <a class=\"page-link\" onclick=\"viewReply('+(startPage+maxPage)+')\" >&gt;</a>';
+            pageHtml += '        </li>';
+            pageHtml += '        <li class=\"page-item\">';
+            pageHtml += '            <a class=\"page-link\" onclick=\"viewReply('+maxPage+')\"></a>&gt;&gt;</li>';
+            pageHtml += '        </li>';
+        }
+        pageHtml +='    </ul>' ;
+        pageHtml +='</div>';
+
+        return pageHtml;
+    }
+    /*]]>*/
+
+</script>
+</html>

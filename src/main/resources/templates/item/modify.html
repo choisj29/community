@@ -1,0 +1,176 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: header"/>
+
+<style>
+    .form-control:disabled{background-color: #fff; border: none;}
+    .field-error { border-color: #dc3545; color: #dc3545;}
+</style>
+<body class="d-flex flex-column h-100 min-vh-100">
+
+    <div th:replace="fragments/bodyHeader :: bodyHeader"/>
+    <!-- Begin page content -->
+    <main class="flex-shrink-0">
+        <div class="container">
+            <!--상품등록-->
+            <div class="col-md-auto mt-5 mb-5">
+                <h4 class="mb-3">키워드 추가</h4>
+                <form class="needs-validation" id="frm" name="frm" method="post" th:object="${ItemUpdateForm}" th:action="@{/item/itemUpdate/{itemId}(itemId=${itemId})}" >
+                    <div class="col-12 mb-2">
+                        <label for="itemName" class="form-label">상품명</label>
+                        <input type="hidden" th:field="*{itemId}">
+                        <input type="text" class="form-control" id="itemName" th:field="*{itemName}" placeholder="상품명" >
+                    </div>
+<!--                    <div class="col-12 mb-2">-->
+<!--                        <label for="renewTimeSet" class="form-label">자동 갱신 시간</label>-->
+<!--                        <select class="form-control" id="renewTimeSet" th:field="*{renewTimeSet}" >-->
+<!--                            <option value="1" th:selected="${renewTimeSet == 1}">1시간마다</option>-->
+<!--                            <option value="6" th:selected="${renewTimeSet == 6}">6시간마다</option>-->
+<!--                            <option value="24" th:selected="${renewTimeSet == 24}">24시간마다</option>-->
+<!--                        </select>-->
+<!--                    </div>-->
+                    <div class="col-12 mb-2">
+                        <label for="mid" class="form-label">MID</label>
+                        <input type="text" class="form-control" id="mid" th:field="*{mid}" placeholder="MID" readonly>
+
+                    </div>
+                    <div class="col-12 mb-2">
+                        <div class="d-flex justify-content-between mb-2">
+                            <label for="keyword" class="form-label">키워드</label>
+                            <button type="button" class="btn btn-sm btn-secondary" id="addButton">추가</button>
+                        </div>
+                        <div class="input-group mb-2 " th:each="keyword : ${ItemUpdateForm.keywordList}" th:id="'input-group' + ${keyword.id}" >
+                            <input type="text" class="form-control" id="keyword"  placeholder="키워드" th:value="${keyword.keyword}" readonly>
+                            <button type="button" class="btn btn-sm btn-info" id="delButton" th:onclick="'javascript:removeKeyword('+${keyword.id}+')'">삭제</button>
+                        </div>
+
+                        <div id="appendArea">
+                            <th:block th:if="${!#lists.isEmpty(ItemUpdateForm.newKeywordList)}" >
+                                <div class="input-group mb-2" th:each="newKeyword, i : ${ItemUpdateForm.newKeywordList}">
+                                    <input type="text" class="form-control" th:id="'newKeyword'+${i.index}" name="newKeyword" placeholder="키워드" th:value="${newKeyword}" th:errorclass="field-error">
+                                    <button type="button" class="btn btn-sm btn-danger" id="removeButton">삭제</button>
+                                </div>
+                                <div class="field-error" id="keywordErr" th:errors="*{newKeyword}" />
+                            </th:block>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <button class="w-100 btn btn-primary btn-lg" type="button" onclick="submitForm()" >등록</button>
+
+                </form>
+            </div>
+
+
+        </div>
+    </main>
+    <div th:replace="fragments/footer :: footer"/>
+
+
+</body>
+<script th:inline="javascript">
+    function removeKeyword(id) {
+        if(confirm("삭제하시겠습니까?")){
+            const data = {
+              "keywordId" : id
+            };
+            $.ajax({
+                url: "/item/removeKeyword",
+                type: "POST",
+                dataType: "json", //ajax -> controller
+                contentType: "application/json; charset=utf-8", // controller -> ajax
+                data: JSON.stringify(data), // 넘길 값
+                success: function (result) {
+                    $("#input-group" + id).remove();
+                    cntAppend--;
+                },
+                error: function () {
+                    alert("error");
+                }
+            });
+        }
+    }
+
+    var cntAppend = $(".input-group").length; //등록된 키워드 개수
+    var maxAppend = 5; //등록가능한 최대 키워드 개수
+
+    var index = 0;
+    $(document).ready(function(){
+
+        //키워드 input 동적 추가
+        $("#addButton").click(function() {
+            $("#keywordErr").hide();
+            if (cntAppend >= maxAppend){
+                alert("키워드는 최대 "+maxAppend+"개까지 등록 가능합니다.");
+                return;
+            }
+            // $("#appendArea").append('<div class=\"input-group mb-2\" ><input type=\"text\" class=\"form-control\" id=\"newKeyword\" name=\"newKeyword\" placeholder=\"키워드\">' +
+            //     '<button type=\"button\" class=\"btn btn-sm btn-danger\" id=\"removeButton\">삭제</button></div>');
+            var newDiv = document.createElement("div")
+            newDiv.setAttribute("class", "input-group mb-2")
+
+            var newInput = document.createElement("input")
+            newInput.setAttribute("class", "form-control")
+            newInput.setAttribute("id", "newKeyword"+index)
+            newInput.setAttribute("name", "newKeyword")
+            newInput.setAttribute("type", "text")
+            newInput.setAttribute("placeholder", "키워드")
+            //newInput.setAttribute("value", newInput.id)
+
+            var removeBtn = document.createElement("button")
+            removeBtn.setAttribute("id", "removeButton")
+            removeBtn.setAttribute("type", "button")
+            removeBtn.setAttribute("class", "btn btn-sm btn-danger")
+            removeBtn.textContent = "삭제"
+
+            newDiv.append(newInput);
+            newDiv.append(removeBtn);
+            $("#appendArea").append(newDiv);
+            index+=1
+            cntAppend++;
+        });
+
+        //재입력 시 오류 메시지 지우기
+        $(".form-control").keyup(function(){
+            $("#keywordErr").hide();
+            $(".field-error").attr("class", "form-control");
+        });
+
+     }); //  /ready
+
+    $(document).on("click", "#removeButton", function(){
+        event.preventDefault();
+        $("#keywordErr").hide();
+        $(this).closest(".input-group").remove();
+        //$(this).parent(".input-group").remove()
+        cntAppend--;
+        resetIndex();
+    });
+
+    function resetIndex(){
+        index = 0
+        $("#appendArea").children("div").each(function (){
+            var target = $(this).children(index, "input[type=text]").first();
+            target.attr("id", "newKeyword" + index);
+
+            index+=1;
+        });
+    }
+
+    function submitForm(){
+        var form = document.getElementById("frm");
+        if(cntAppend <= 0 || $("#newKeyword0").val() == ''){
+            alert("키워드는 등록은 필수입니다.");
+            $("#addButton").focus();
+            return;
+        }else{
+            form.submit();
+        }
+    }
+
+
+
+</script>
+
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- 페이징처리 시작 -->
+<div th:if="${!paging.isEmpty()}" th:fragment="pagingV1">
+    <ul class="pagination justify-content-center">
+        <li class="page-item" th:classappend="${!paging.hasPrevious} ? 'disabled'">
+            <a class="page-link"
+               th:href="@{|?page=${paging.number}|}">
+                <span>이전</span>
+            </a>
+        </li>
+        <li th:each="page: ${#numbers.sequence(1, paging.totalPages)}"
+            th:classappend="${page == paging.number+1} ? 'active'"
+            class="page-item">
+            <a th:text="${page}" class="page-link" th:href="@{|?page=${page}|}"></a>
+        </li>
+        <li class="page-item" th:classappend="${!paging.hasNext} ? 'disabled'">
+            <a class="page-link" th:href="@{|?page=${paging.number+2}|}">
+                <span>다음</span>
+            </a>
+        </li>
+    </ul>
+</div><!-- /페이징처리 -->
+
+<div th:if="${!paging.isEmpty()}" >
+    <ul class="pagination pagination justify-content-center" th:with="start=${(paging.number/maxPage)*maxPage + 1}, end=(${(paging.totalPages == 0) ? 1 : (start + (maxPage - 1) < paging.totalPages ? start + (maxPage - 1) : paging.totalPages)})">
+        <li class="page-item" th:if="${start > 1}">
+            <a class="page-link" th:href="@{|?page=1|}" th:text="'<<'"></a>
+        </li>
+        <li class="page-item" th:if="${start > 1}">
+            <a class="page-link" th:href="@{|?page=${start - maxPage}|}" th:text="'<'"></a>
+        </li>
+
+        <li th:each="page: ${#numbers.sequence(start, end)}"
+            th:classappend="${page == paging.number+1} ? 'active'"
+            class="page-item">
+            <a class="page-link" th:text="${page}" th:href="@{|?page=${page}|}"></a>
+        </li>
+
+        <li class="page-item"th:if="${end < paging.totalPages}">
+            <a class="page-link" th:href="@{|?page=${start + maxPage}|}" th:text="'>'"></a>
+        </li>
+        <li class="page-item" th:if="${end < paging.totalPages}">
+            <a class="page-link" th:href="@{|?page=${paging.totalPages|}" th:text="'>>'"></a>
+        </li>
+    </ul>
+</div>
+
+<div th:if="${!paging.isEmpty()}" th:fragment="paging"
+     th:with="start=${(paging.number/maxPage)*maxPage + 1},
+                  end=(${(paging.totalPages == 0) ? 1 : (start + (maxPage - 1) < paging.totalPages ? start + (maxPage - 1) : paging.totalPages)})" >
+    <ul  class="pagination pagination justify-content-center">
+        <li class="page-item" >
+            <a class="page-link" th:href="@{|?page=1|}" th:text="'<<'"></a></li>
+        </li>
+
+        <li class="page-item" >
+            <a class="page-link"  th:href="${start > 1} ? @{|?page=${start - maxPage}|} : '#' " th:text="'<'"></a>
+        </li>
+
+
+        <li class="page-item" th:each="page: ${#numbers.sequence(start, end)}"
+            th:classappend="${page == paging.number+1} ? 'active'">
+            <a class="page-link" th:text="${page}" th:href="@{|?page=${page}|}" ></a></li>
+        </li>
+
+        <li class="page-item" th:if="${end < paging.totalPages}">
+            <a class="page-link" th:href="@{|?page=${start + maxPage}|}" th:text="'>'"></a>
+        </li>
+
+        <li class="page-item" th:if="${end < paging.totalPages}">
+            <a class="page-link" th:href="@{|?page=${paging.totalPages}|}" th:text="'>>'"></a></li>
+        </li>
+    </ul>
+
+</div>
+
+<div th:if="${!paging.isEmpty()}" th:fragment="pagingV2"
+     th:with="start=${(paging.number/maxPage)*maxPage + 1},
+              end=(${(paging.totalPages == 0) ? 1 : (start + (maxPage - 1) < paging.totalPages ? start + (maxPage - 1) : paging.totalPages)})" >
+    <ul  class="pagination pagination justify-content-center">
+        <li class="page-item" >
+            <a class="page-link" th:href="@{|?page=1|}" th:text="'<<'"></a></li>
+        </li>
+
+        <li class="page-item" >
+            <a class="page-link" th:href="${paging.number > 0} ? @{|?page=${paging.number}|} : '#' "  th:text="'<'"></a>
+        </li>
+
+        <li class="page-item" th:each="page: ${#numbers.sequence(start, end)}"
+            th:classappend="${page == paging.number+1} ? 'active'">
+            <a class="page-link" th:text="${page}" th:href="@{|?page=${page}|}" ></a></li>
+        </li>
+
+        <li class="page-item" th:if="${end < paging.totalPages}">
+            <a class="page-link" th:href="@{|?page=${paging.number+2}|}" th:text="'>'"></a>
+        </li>
+
+        <li class="page-item" th:if="${end < paging.totalPages}">
+            <a class="page-link" th:href="@{|?page=${paging.totalPages}|}" th:text="'>>'"></a></li>
+        </li>
+    </ul>
+
+</div>
+
+<div th:if="${!paging.isEmpty()}" th:fragment="pagingV3"
+     th:with="start=${pageMaker.startPage},
+              end=${pageMaker.endPage}" >
+    <ul  class="pagination pagination justify-content-center">
+        <li class="page-item"  th:if="${pageMaker.prev}">
+            <a class="page-link" th:href="@{|?page=1|}" th:text="'<<'"></a></li>
+        </li>
+        <li class="page-item" th:if="${pageMaker.prev}" >
+            <a class="page-link" th:href="@{|?page=${start - 1}|}"  th:text="'<'"></a>
+        </li>
+        <li class="page-item" th:each="page: ${#numbers.sequence(start, end)}"
+            th:classappend="${page == paging.number+1} ? 'active'">
+            <a class="page-link" id="aLink" th:text="${page}" th:href="@{|?page=${page}|}" ></a></li>
+        </li>
+        <li class="page-item" th:if="${pageMaker.next}">
+            <a class="page-link" th:href="@{|?page=${start + pageMaker.maxPage}|}" th:text="'>'"></a>
+        </li>
+        <li class="page-item" th:if="${pageMaker.next}">
+            <a class="page-link" th:href="@{|?page=${pageMaker.realEndPage}|}" th:text="'>>'"></a></li>
+        </li>
+    </ul>
+
+</div>
+
+<div th:if="${!paging.isEmpty()}" th:fragment="pagingBoard"
+     th:with="start=${pageMaker.startPage},
+              end=${pageMaker.endPage}" >
+    <ul class="pagination pagination justify-content-center">
+        <li class="page-item"  th:if="${pageMaker.prev}">
+            <a class="page-link" href="#" th:onclick="'javascript:movePage(1)'" t th:text="'<<'"></a></li>
+        </li>
+
+        <li class="page-item" th:if="${pageMaker.prev}" >
+            <a class="page-link" href="#" th:onclick="'javascript:movePage('+${start - 1}+')'" th:text="'<'"></a>
+        </li>
+        <li class="page-item" th:each="page: ${#numbers.sequence(start, end)}"
+            th:classappend="${page == paging.number+1} ? 'active'">
+            <a class="page-link" href="#" th:text="${page}" th:onclick="'javascript:movePage('+${page}+')'" ></a></li>
+        </li>
+
+        <li class="page-item" th:if="${pageMaker.next}">
+            <a class="page-link" href="#" th:onclick="'javascript:movePage('+${start + pageMaker.maxPage}+')'" th:text="'>'"></a>
+        </li>
+
+        <li class="page-item" th:if="${pageMaker.next}">
+            <a class="page-link" href="#" th:onclick="'javascript:movePageBoard('+${pageMaker.realEndPage}+')'" th:text="'>>'"></a></li>
+        </li>
+    </ul>
+
+</div>

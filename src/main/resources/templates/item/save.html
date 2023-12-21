@@ -1,0 +1,213 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: header"/>
+
+<link href="/css/custom.css" rel="stylesheet">
+<body class="d-flex flex-column h-100 min-vh-100">
+
+<div th:replace="fragments/bodyHeader :: bodyHeader"/>
+<!-- Begin page content -->
+<main class="flex-shrink-0">
+    <div class="container">
+        <!--상품등록-->
+        <div class="col-md-auto mt-5 mb-5">
+            <h4 class="mb-3">상품등록</h4>
+            <form class="needs-validation" novalidate id="frm" name="frm" th:object="${itemForm}" >
+                <div class="col-12 mb-2">
+                    <label for="mid" class="form-label">MID</label>
+                    <input type="text" class="form-control" id="mid" th:field="*{mid}" placeholder="MID" th:errorclass="field-error">
+                    <div class="field-error" id="midError" style="display: none"></div>
+                </div>
+
+                <div class="col-12 mb-2" id="appendArea">
+                    <label for="keyword" class="form-label">키워드</label>
+                    <div class="field-error" id="keywordError" style="display: none"></div>
+                    <div class="input-group mb-2" >
+                        <input type="text" class="form-control" id="keyword" th:field="*{keywords}" placeholder="키워드" th:errorclass="field-error">
+                        <button type="button" class="btn btn-sm btn-secondary" id="addButton">추가</button>
+                    </div>
+                </div>
+                <hr class="my-4">
+
+                <button class="w-100 btn btn-primary btn-lg" type="button" onclick="submitForm()" >등록</button>
+            </form>
+        </div>
+
+        <!--상품조회-->
+        <div id="content" style="display:none">
+            <h4 class="mb-3" >상품조회</h4>
+            <div class="row mb-2" >
+                <div class="col" >
+                    <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                        <div class="col-2 card-body d-none d-lg-block ">
+                            <img id="savedImgLink" width="130" height="100%">
+                        </div>
+                        <div class="col p-4 d-flex flex-column position-static ml-1">
+                            <a class="nav-link" id="saveItemLink">
+                                <h3 class="mb-0" id="savedItemName">item name</h3>
+                                <div id="keyword-rank-wrap">
+
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /상품조회-->
+        <!--로딩바-->
+        <div id="loading" style="margin-left: 0px;">
+            <img src="/img/loadingImg.gif">
+        </div>
+    </div>
+</main>
+<div th:replace="fragments/footer :: footer"/>
+
+
+</body>
+<script th:inline="javascript">
+    var cntAppend = 1; //등록된 키워드 개수
+    var maxAppend = 5; //등록가능한 최대 키워드 개수
+
+    $(document).ready(function(){
+        //재입력 시 오류 메시지 지우기
+        $(".form-control").keyup(function(){
+            $(this).siblings('.field-error').hide();
+        });
+
+        //키워드 input 동적 추가
+        $("#addButton").click(function() {
+            if (cntAppend >= maxAppend){
+                alert("키워드는 최대 "+maxAppend+"개까지 등록 가능합니다.");
+                return;
+            }
+            $("#appendArea").append('<div class=\"input-group mb-2\" ><input type=\"text\" class=\"form-control\" id=\"keyword\" name=\"keywords\" placeholder=\"키워드\">' +
+                '<button type=\"button\" class=\"btn btn-sm btn-danger\" id=\"removeButton\">삭제</button></div>');
+            cntAppend++;
+        });
+    }); //end of dom
+
+    $(document).on("click", "#removeButton", function(){
+        event.preventDefault();
+        $(this).closest(".input-group").remove();
+        cntAppend--;
+    });
+
+    $(document).on("keyup", "#keyword", function(){
+        event.preventDefault();
+        $('#keywordError').hide();
+    });
+
+    //배열 중복제거
+    function unique(array) {
+        var result = [];
+        $.each(array, function(index, element) {   // 배열의 원소수만큼 반복
+            if ($.inArray(element, result) == -1) {  // result 에서 값을 찾는다.  //값이 없을경우(-1)
+                result.push(element);              // result 배열에 값을 넣는다.
+            }
+        });
+        return result;
+    }
+
+    //상품 갱신
+    function renewRank(itemId, keyword){
+        const data = {
+            "itemId": itemId,
+            "keyword": keyword,
+            "mid": $("#mid").val(),
+            "renewTimeSet": $("#renewTimeSet").val()
+        };
+
+        $.ajax({
+            url: "/item/renewRank",
+            type: "POST",
+            dataType: "json", //ajax -> controller
+            contentType: "application/json; charset=utf-8", // controller -> ajax
+            data: JSON.stringify(data), // 넘길 값
+            success: function (result) {
+                console.log("renew rank itemId is ", result[0].itemId)
+                console.log("renew rank result empty or not ", result[0].itemName)
+                $('#loading').hide();
+                $('#content').show();
+                $('#savedImgLink').attr('src', result[0].imgLink);
+                $('#savedItemName').text(result[0].itemName);
+                var span1 = document.createElement('span');
+                span1.setAttribute("class", "");
+                span1.innerHTML = result[0].keyword;
+                var span2 = document.createElement('span');
+                span2.setAttribute("class", "");
+                span2.innerHTML+="/"+result[0].rank+" ";
+                $('#keyword-rank-wrap').append(span1);
+                $('#keyword-rank-wrap').append(span2);
+            },
+            error: function (request,status,error) {
+                $('#loading').hide();
+                console.log(request.responseText);
+                alert(request.responseText);
+            }
+        });
+    }
+
+    //상품 등록 후 조회
+    function submitForm(){
+        $('#loading').show();
+        var itemName = $("#itemName").val();
+        var mid =   $("#mid").val();
+        var categoryName =   $("#categoryName").val();
+
+        var keywordLen = $("input[name=keywords]").length;
+        var keywordArr = new Array(keywordLen);
+        //특수문자, 괄호, 점, 공백 모두 제거
+        var reg = /[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/ ]/gim;
+
+        for(var i=0; i<keywordLen; i++){
+            keywordArr[i] = $("input[name=keywords]").eq(i).val().replace(reg, "");
+        }
+
+        keywordArr = $.grep(keywordArr,function(n){ return n == " " || n; }); //빈배열 삭제
+
+        var uniqKeywordArr = unique(keywordArr);
+
+        if(uniqKeywordArr.length < keywordArr.length){ //중복값이 있다
+            alert("중복된 키워드는 등록이 불가합니다.");
+            return;
+        }
+
+        const data = {
+            "itemName": itemName,
+            "mid": mid,
+            "categoryName": categoryName,
+            "keywords": uniqKeywordArr
+        };
+
+        $.ajax({
+            url: "/item/save",
+            type: "POST",
+            dataType: "text", //ajax -> controller
+            contentType: "application/json; charset=utf-8", // controller -> ajax
+            data: JSON.stringify(data), // 넘길 값
+            success: function (result) {
+                if (result == 0) {
+                    alert("상품 등록에 실패하였습니다.");
+                    return;
+                }
+                //키워드 개수만큼 개별의 요청으로 보내주기
+                for (var i = 0; i < uniqKeywordArr.length; i++) {
+                    renewRank(result,uniqKeywordArr[i]);
+                }
+                //itemSave success input, button, select disabled
+                $("#frm").find("input,button").each(function(index, item){
+                    $(this).attr('readonly', true);
+                    $('button').attr('disabled', true);
+                    $('option').attr('disabled', true);
+                });
+            },
+            error: function (response) {
+                console.log("ajax error" + response);
+            }
+        });
+    }
+    $(document).ready(function() {
+        $('#loading').hide(); //로딩바
+    });
+</script>
+</html>

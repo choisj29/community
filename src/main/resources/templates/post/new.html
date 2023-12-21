@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: header"/>
+<link href="/css/custom.css" rel="stylesheet">
+<body class="d-flex flex-column h-100 min-vh-100">
+<div th:replace="fragments/bodyHeader :: bodyHeader"/>
+
+<!-- Begin page content -->
+<main class="flex-shrink-0">
+    <div class="container mt-5 mb-5">
+        <h4 class="mb-3">글 작성</h4>
+            <form class="needs-validation" id="frm" name="frm" th:action="@{/post/new}" method="post" enctype="multipart/form-data" >
+
+            <table class="table table-striped" >
+                <tbody>
+                <tr>
+                    <th> <label th:for="title">제목</label></th>
+                    <td>
+                        <input type="text" class="form-control" data-name="제목을" name="title" >
+                    </td>
+                </tr>
+                <tr>
+                    <th>내용</th>
+                    <td>
+                        <textarea class="form-control" data-name="내용을" name="content" style="height: 500px"></textarea>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+<!--            <div class="col">-->
+<!--                <input type="file" id="imageFiles" name="imageFiles" multiple="multiple" accept="image/jpeg, image/png, image/jpg">-->
+<!--                <output></output>-->
+<!--            </div>-->
+<!--            <div class="input-images"></div>-->
+
+            <hr class="my-4">
+            <button type="button" class="w-100 btn btn-primary" onclick="submitForm()">등록</button>
+        </form>
+
+    </div>
+</main>
+<div th:replace="fragments/footer :: footer"/>
+</body>
+<link type="text/css" rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link type="text/css" rel="stylesheet" href="http://example.com/image-uploader.min.css">
+<script type="text/javascript" src="http://example.com/jquery.min.js"></script>
+<script type="text/javascript" src="http://example.com/image-uploader.min.js"></script>
+<script>
+//img
+const output = document.querySelector("output")
+const input = document.querySelector("input[type='file']")
+let imagesArray = []
+
+input.addEventListener("change", () => {
+    const files = input.files
+    for (let i = 0; i < files.length; i++) {
+        imagesArray.push(files[i])
+    }
+    displayImages()
+    console.log("imagesArray" + imagesArray);
+})
+
+function displayImages() {
+    let images = ""
+    imagesArray.forEach((image, index) => {
+        images += `<div class="image">
+                <img src="${URL.createObjectURL(image)}" alt="image">
+                <span onclick="deleteImage(${index})">&times;</span>
+              </div>`
+    })
+    output.innerHTML = images
+}
+
+function deleteImage(index) {
+    imagesArray.splice(index, 1)
+    console.log("imagesArray" + imagesArray);
+    displayImages()
+}
+
+
+function submitForm(){
+    var form = document.getElementById("frm");
+
+    //공백입력 검사
+    var isRight = true;
+    $("#frm").find("input[type='text'],textarea").each(function(index, item){
+        // 아무값 없이 띄어쓰기만 있을 때도 빈 값으로 체크되도록 trim() 함수 호출
+        if ($(this).val().trim() == '') {
+            alert($(this).attr("data-name")+" 입력하세요.");
+            $(this).focus();
+            isRight = false;
+            return false;
+        }
+    });
+    if (!isRight) {
+        return;
+    }
+
+    form.submit();
+}
+
+//form 태그 내 input text 1개만 있을 때 enter submit 막기
+$('input[type="text"]').keydown(function() {
+    if (event.keyCode === 13) {
+        event.preventDefault();
+    }
+});
+
+</script>
+</html>

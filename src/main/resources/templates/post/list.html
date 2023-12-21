@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: header"/>
+
+<body class="d-flex flex-column h-100 min-vh-100">
+
+<div th:replace="fragments/bodyHeader :: bodyHeader"/>
+<!-- Begin page content -->
+<main class="flex-shrink-0">
+    <div class="container mt-5 mb-5">
+        <h4 class="mb-3">글 목록</h4>
+        <div class="d-flex justify-content-end mb-2">
+            <a class="btn btn-sm btn-dark" th:href="@{/post/new}">글쓰기</a>
+        </div>
+        <div style="min-height: 550px;" class="mb-4">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th style="width: 50%;">제목</th>
+                    <th>작성자</th>
+                    <th>작성일</th>
+                    <th>조회</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="post : ${paging}">
+                    <td th:text="${post.postId}"></td>
+                    <td class="d-flex justify-content-start">
+                        <a th:href="@{/post/{postId}(postId=${post.postId})}" th:text="${post.title}" ></a>
+                        <div class="ml-1" th:if="${post.replyCount > 0}">(<span th:text="${post.replyCount}"></span>)</div>
+                    </td>
+                    <td th:text="${post.userName}"></td>
+                    <td th:text="${#strings.substring(post.writeTime, 0, 10)}"></td>
+                    <td th:text="${post.viewCount}"></td>
+                </tr>
+                <tr th:if="${pageMaker.total==0}">
+                    <td th:colspan="5">게시글이 없습니다.</td>
+                </tr>
+
+                </tbody>
+
+            </table>
+        </div>
+
+        <!-- 페이징 -->
+        <div th:replace="fragments/paging :: pagingBoard"/>
+
+        <!--검색 -->
+        <div class="d-flex justify-content-center mt-3" >
+            <!--<form class="col-10 " role="search" th:object="${searchForm}" th:action="@{/board/search}" th:method="get" id="frm" name="frm">-->
+            <form class="col-10 " role="search" th:object="${searchReq}" id="frm" name="frm">
+                <div class="input-group">
+                    <select class="form-control col-md-3 mr-2" id="searchKey" th:field="*{searchCondition}">
+                        <option value="all" th:selected>제목+내용</option>
+                        <option value="title" th:selected="${searchReq.getSearchCondition() == 'title'}">제목</option>
+                        <option value="content" th:selected="${searchReq.getSearchCondition() == 'content'}">내용</option>
+                    </select>
+                    <input type="search" class="form-control" aria-label="Search" id="schKeyword" th:field="*{searchKeyword}">
+
+                    <button type="button" class="btn btn-secondary ml-2" onclick="listSearch()">검색</button>
+                </div>
+                <input type="hidden" id="page">
+            </form>
+            <input type="hidden" id="searchKeyword" th:value="${param.searchKeyword}">
+            <input type="hidden" id="searchCondition" name="searchCondition" th:value="${param.searchCondition}" >
+        </div>
+
+
+    </div>
+</main>
+<div th:replace="fragments/footer :: footer"/>
+<script type="text/javascript" src="/js/param.js" ></script>
+<script th:inline="javascript">
+    // 페이지 이동
+    function movePage(page) {
+        location.href = "/board/boardList"+ queryString(page);
+    }
+
+    //검색
+    function listSearch(){
+        $("#page").val(1);
+        $("#searchKeyword").val($("#schKeyword").val());
+        $("#searchCondition").val($("#searchKey").val());
+
+        var form = document.getElementById("frm");
+        form.setAttribute("method", "get");
+        form.setAttribute("action", "/post/list");
+        form.submit();
+    }
+
+</script>
+</body>
+</html>

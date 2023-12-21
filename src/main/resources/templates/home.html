@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: header">
+    <title>Hello</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+
+<body class="d-flex flex-column h-100 min-vh-100">
+
+<div th:replace="fragments/bodyHeader :: bodyHeader"/>
+<!-- Begin page content -->
+<main class="flex-shrink-0">
+    <div class="container mt-5 mb-5">
+        <div class="jumbotron">
+            <div class="py-3 text-center">
+                <h1 th:text="#{header.name}"></h1>
+            </div>
+            <hr class="my-4">
+            <div class="py-3 text-center">
+                <p>
+                    <a class="btn btn-lg btn-secondary" href="/post/list">게시판</a>
+                </p>
+<!--                <p>-->
+<!--                    <a class="btn btn-lg btn-secondary" href="/item/itemSave">랭킹추적</a>-->
+<!--                    <a class="btn btn-lg btn-secondary" href="/check/view">랭킹추적V2</a>-->
+<!--                </p>-->
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="fragments/footer :: footer"/>
+</body>
+
+</html>

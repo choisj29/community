@@ -1,0 +1,386 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: header"/>
+
+<body class="d-flex flex-column h-100 min-vh-100">
+
+<div th:replace="fragments/bodyHeader :: bodyHeader"/>
+<!-- Begin page content -->
+<main class="flex-shrink-0">
+    <div class="container">
+        <!--상품조회-->
+        <div id="content">
+            <div class="row mb-2" >
+                <div class="col" >
+                    <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                        <div class="col-auto d-none d-lg-block">
+                            <img id="savedImgLink" width="130" height="130" th:src="${item.getImgLink()}">
+                        </div>
+                        <div class="col p-4 d-flex flex-column position-static">
+                            <h3 class="mb-0" th:text="${item.getItemName()}">item name</h3>
+                            <h4 class="mb-0" th:text="${item.getMid()}">mid</h4>
+                            <div class="text-muted" th:text="${#strings.substring(item.getCreatedTime(),0,10)}">게시일</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /상품조회-->
+
+        <!--chart-->
+        <div class="input-group row justify-content-between">
+            <h2>키워드 랭킹 추적</h2>
+            <div class='col-xs-4 mb-1'>
+                <button type="button" class="btn btn-primary btn" th:onclick="|location.href='@{/item/list}'|">전체목록</button>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div id="keyword--box" class="list-group list-group-flush" th:each="keyword : ${item.getKeywords()}">
+
+                <div th:id="'keyword--' + ${keyword.id}" th:onclick="'javascript:showLog('+${keyword.id}+')'"  class="list-group-item d-flex justify-content-start">
+                    <div class="d-flex">
+                        <div class="text-monospace mr-1" th:text="${keyword.keyword}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="table-responsive" style="display: none">
+            <h2 id="keywordName">키워드</h2>
+
+            <div class="input-group row justify-content-end">
+                <div class='col-md-3'>
+                    <div class="form-group">
+                        <div class="input-group date">
+                            <input type="date" class="form-control" id="strDate" placeholder="시작일">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-4"><p class="text-center">-</p></div>
+                <div class='col-md-3'>
+                    <div class="form-group">
+                        <div class="input-group date">
+                            <input type="date" class="form-control" id="endDate" placeholder="시작일">
+                        </div>
+                    </div>
+                </div>
+                <div class='col-xs-4'>
+                    <input type="hidden" id="keywordId">
+                    <button type="button" class="btn btn-primary btn" onclick="showLog()" >적용하기</button>
+                </div>
+            </div>
+
+            <!-- 그래프 출력 영역 -->
+            <canvas class="my-4 w-100 mb-4" id="myChart" width="900" height="380"></canvas>
+
+            <!-- 차트 출력 영역 -->
+            <table class="table table-striped table-sm">
+                <thead>
+                <tr>
+                    <th scope="col" style="width: 25%;">날짜</th>
+                    <th scope="col" style="width: 20%;">상품명</th>
+                    <th scope="col" style="width: 15%;">키워드</th>
+                    <th scope="col" style="width: 15%;">순위</th>
+                </tr>
+                </thead>
+                <tbody id="appendArea">
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+<div th:replace="fragments/footer :: footer"/>
+
+
+</body>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js" integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js" integrity="sha384-zNy6FEbO50N+Cg5wap8IKA4M/ZnLJgzc6w2NqACZaK0u0FXfOWRRJOnQtpZun8ha" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.38/moment-timezone.min.js" ></script>
+
+<script th:inline="javascript">
+    $(document).on("change", "#endDate", function(){
+        event.preventDefault();
+        var endDate = document.getElementById("endDate").value;
+        var str = moment(endDate).format('YYYY-MM-DD');
+        $("#strDate").attr("max", str);
+    });
+
+    $(document).ready(function() {
+        var keywordId =/*[[${item.getKeywords().get(0).getId()}]]*/
+        showLog(keywordId);
+    });
+
+    let myChart;
+    var chartLabels = [];
+    var chartData = [];
+    var chartRogId = [];
+    const dataSet = [];
+
+    // function showLog(keywordId){
+    //     var strDate = document.getElementById("strDate").value;
+    //     var endDate = document.getElementById("endDate").value;
+    //
+    //     var parsedStrDate;
+    //     var parsedEndDate;
+    //
+    //     if(strDate != ""){
+    //         parsedStrDate = moment(strDate).format('YYYY-MM-DD[T]HH:mm:ss.SSS');
+    //     }
+    //     if(endDate != ""){
+    //         parsedEndDate = moment(endDate).format('YYYY-MM-DD[T]HH:mm:ss.SSS');
+    //     }
+    //     if(keywordId == undefined){
+    //         keywordId = document.getElementById("keywordId").value;
+    //     }
+    //
+    //     const data = {
+    //         "keywordId": keywordId,
+    //         "strDate" : parsedStrDate,
+    //         "endDate" : parsedEndDate,
+    //         "strDateString" : strDate,
+    //         "endDateString" : endDate
+    //     };
+    //
+    //     //차트 초기화
+    //     if (myChart !== undefined) {
+    //         myChart.destroy();
+    //     }
+    //
+    //     //배열 초기화
+    //     chartLabels.length = 0;
+    //     chartData.length = 0;
+    //     dataSet.length = 0;
+    //
+    //     $.ajax({
+    //         url: "/item/rankLogRange",
+    //         type: "POST",
+    //         dataType: "json", //ajax -> controller
+    //         contentType: "application/json; charset=utf-8", // controller -> ajax
+    //         data: JSON.stringify(data), // 넘길 값
+    //         success: function (result) {
+    //
+    //             $(".table-responsive").show();
+    //
+    //             var html = "";
+    //
+    //             $.each(result, function(index, item) {
+    //                 //키워드
+    //                 $("#keywordName").text(item.keyword);
+    //
+    //                 //시작일 종료일
+    //                 if(index==0) {
+    //                     if(item.strDateString == ""){
+    //                         $("#strDate").val(item.date.substring(0,10));
+    //                     }else {
+    //                         $("#strDate").val(item.strDateString);
+    //                     }
+    //                 }
+    //
+    //                 if(index==(result.length-1))  {
+    //                     if(item.endDateString == ""){
+    //                         $("#endDate").val(item.date.substring(0,10));
+    //                     }else{
+    //                         $("#endDate").val(item.endDateString);
+    //                     }
+    //                 }
+    //
+    //                 //그래프 json data push
+    //                 chartLabels.push(item.date.substring(0,10));
+    //                 chartData.push(item.rank);
+    //                 chartRogId.push(item.rankLogId);
+    //
+    //                 //차트 html
+    //                 html += '<tr>';
+    //                 html += '<td>'+item.date+'</td>';
+    //                 html += '<td>'+item.itemName+'</td>';
+    //                 html += '<td>'+item.keyword+'</td>';
+    //                 html += '<td>'+item.rank+'</td>';
+    //                 html += '</tr>';
+    //
+    //             });
+    //
+    //             createChart();
+    //
+    //             $("#appendArea").empty();
+    //             $("#appendArea").append(html);
+    //
+    //             // for rankLogRange
+    //             $("#keywordId").val(keywordId);
+    //
+    //         },
+    //         error: function (response) {
+    //             console.log("ajax error" + response);
+    //         }
+    //     });
+    //
+    // }
+
+    function showLog(keywordId){
+        console.log("showLog keywordId" + keywordId);
+        var start = document.getElementById("strDate").value;
+        var end = document.getElementById("endDate").value;
+
+        if(keywordId == undefined) keywordId = document.getElementById("keywordId").value;
+
+        const data = {
+            "keywordId": keywordId,
+            "start" : start,
+            "end" : end
+        };
+
+        //차트 초기화
+        if (myChart !== undefined) {
+            myChart.destroy();
+        }
+
+        //배열 초기화
+        chartLabels.length = 0;
+        chartData.length = 0;
+        dataSet.length = 0;
+
+        $.ajax({
+            url: "/item/range",
+            type: "POST",
+            dataType: "json", //ajax -> controller
+            contentType: "application/json; charset=utf-8", // controller -> ajax
+            data: JSON.stringify(data), // 넘길 값
+            success: function (result) {
+                $(".table-responsive").show();
+
+                var html = "";
+
+                $.each(result, function(index, item) {
+                    //키워드
+                    $("#keywordName").text(item.keyword);
+
+                    //시작일 종료일
+                    if(index==0) {
+                        if(item.strDateString == ""){
+                            $("#strDate").val(item.date.substring(0,10));
+                        }else {
+                            $("#strDate").val(item.strDateString);
+                        }
+                    }
+
+                    if(index==(result.length-1))  {
+                        if(item.endDateString == ""){
+                            $("#endDate").val(item.date.substring(0,10));
+                        }else{
+                            $("#endDate").val(item.endDateString);
+                        }
+                    }
+
+                    //그래프 json data push
+                    var parsedDate = item.date.substring(0,10);
+                    chartLabels.push(parsedDate);
+                    chartData.push(item.rank);
+                    chartRogId.push(item.rankLogId);
+
+                    //차트 html
+                    html += '<tr>';
+                    html += '<td>'+parsedDate+'</td>';
+                    html += '<td>'+item.itemName+'</td>';
+                    html += '<td>'+item.keyword+'</td>';
+                    html += '<td>'+item.rank+'</td>';
+                    html += '</tr>';
+
+                });
+
+                createChart();
+
+                $("#appendArea").empty();
+                $("#appendArea").append(html);
+
+                // for rankLogRange
+                $("#keywordId").val(keywordId);
+                $("#strDate").val(start);
+                $("#endDate").val(end);
+
+            },
+            error: function (response) {
+                console.log("ajax error" + response);
+            }
+        });
+
+    }
+
+    function createChart(){
+        // Graphs
+        const ctx = document.getElementById('myChart')
+        // eslint-disable-next-line no-unused-vars
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datalabels: {
+                    listeners: {
+                        click: function (context, event) {
+                            // Receives `click` events only for labels of the first dataset.
+                            // The clicked label index is available in `context.dataIndex`.
+                            console.log('label ' + context.dataIndex + ' has been clicked!');
+                            console.log('mouse is at position x:', event.x, 'and y:', event.y);
+
+                            if (event.native.ctrlKey) {
+                                console.log('control key is pressed!');
+                            }
+                        }
+                    }
+                },
+                datasets: [{
+                    data: chartData,
+                    lineTension: 0,
+                    backgroundColor: 'transparent',
+                    borderColor: '#007bff',
+                    borderWidth: 4,
+                    pointBackgroundColor: '#007bff'
+                }]
+            },
+            options: {
+                'onClick' : function(c,i) {
+                    e = i[0];
+                    var x_value = this.data.labels[e._index];
+                    var y_value = this.data.datasets[0].data[e._index];
+                    console.log(x_value);
+                    console.log(y_value);
+                    clickHandler(x_value,y_value);
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            stepSize: 1,
+                            suggestedMax: 10
+                        }
+                    }]
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            footer: footer
+                        }
+                    }
+                },
+                legend: {
+                    display: false
+                }
+            }
+        })
+    }
+
+    const footer = (tooltipItems) => {
+        let sum = 0;
+
+        tooltipItems.forEach(function(tooltipItem) {
+            sum += tooltipItem.parsed.y;
+        });
+        return 'Sum: ' + sum;
+    };
+
+    function clickHandler(x,y){
+        console.log("tooltip clicked");
+        console.log(y);
+    }
+</script>
+
+
+</html>

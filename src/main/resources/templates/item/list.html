@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: header"/>
+<link href="/css/custom.css" rel="stylesheet">
+<body class="d-flex flex-column h-100 min-vh-100">
+
+<div th:replace="fragments/bodyHeader :: bodyHeader"/>
+
+<!-- Begin page content -->
+<main class="flex-shrink-0">
+    <div class="container mt-5 mb-5" style="min-width: 900px">
+
+        <!--상품목록조회-->
+        <div id="content">
+            <div class="row mb-1">
+                <div class="col">
+                    <h4 class="mb-1" >상품목록</h4>
+                </div>
+                <div class="col-2">
+                    <!--상품등록 버튼-->
+                    <a class="btn btn-sm btn-dark" href="/item/save">상품등록</a>
+                </div>
+            </div>
+            <div class="list-group list-group-flush mb-2" id="thArea" >
+                <div class="list-group-item" th:each="item : ${paging}">
+                    <div class="row g-0 border rounded overflow-hidden flex-md-row mb-1 shadow-sm h-md-250 position-relative">
+                        <div class="col-auto d-none d-lg-block ">
+                            <img style="max-width: 130px;, max-height: 130px; margin-top: 15px;"  th:src="${item.itemImgLink}">
+                        </div>
+
+                        <div class="col-4 p-4 d-flex flex-column position-static ">
+                            <a class="nav-link" th:href="@{/item/{itemId}(itemId=${item.itemId})}">
+                                <h3 class="mb-0" th:text="${#strings.length(item.itemName) > 8} ? ${#strings.substring(item.itemName, 0, 8)}+'...' : ${item.itemName}" >item name</h3>
+                                <div class="mb-1 text-muted" th:text="${#strings.substring(item.getRegDate(),0,10)}">게시일</div>
+                            </a>
+                        </div>
+                        <div class="col p-4" th:id="'keyword-wrap-area'+${item.itemId}" >
+                            <div th:each="keyword, i: ${item.getKeywords()}" th:if="${i.index < 3}" class="d-flex justify-content-start">
+                                <span th:if="${!#strings.isEmpty(keyword.getKeyword())}" class="mr-1 mb-1 text-muted text-nowrap" th:id="'rankKeyword'+${keyword.getKeywordId()}" th:text="${keyword.getKeyword()}">키워드</span>
+                                <span >/</span>
+                                <span th:if="${!#lists.isEmpty(keyword.getRank())}" class="ml-1 mb-1 text-muted" th:id="'itemRank' + ${keyword.getKeywordId()}" th:text="${keyword.getRank()}">rank</span>
+                                <span th:if="${#lists.isEmpty(keyword.getRank())}" class="mb-1 text-muted" th:id="'itemRank' + ${keyword.getKeywordId()}" th:text="0"> No rank Data </span>
+                                <div th:id="'loadingImg' + ${keyword.getKeywordId()}" class="ml-1 display-none loading">
+                                    <img src="/img/loadingImg.gif" style="width: 20px; height: 20px;"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col p-4 d-flex flex-column position-static ">
+                            <div class="mb-1 text-muted">순위 갱신일</div>
+                            <div th:if="${!#lists.isEmpty(item.getKeywords())}" class="mb-1 text-muted" th:id="'rankDateArea' + ${item.itemId}" th:text="${#temporals.format(item.getKeywords().get(item.getKeywords().size()-1).getRenewDate(),'yy-MM-dd HH:mm')}"></div>
+                        </div>
+                        <div class="col p-4 d-flex flex-column position-static ">
+                            <div class="mb-1 text-muted" >
+                                <button type="button" th:onclick="'javascript:getKeyword('+${item.itemId} +')'" class="btn btn-sm btn-secondary">갱신</button>
+                            </div>
+                            <div class="mb-1 text-muted" >
+                                <button type="button" th:onclick="'javascript:deleteItem('+${item.itemId} +')'" class="btn btn-sm btn-danger">삭제</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="col" th:if="${paging.totalElements==0}">
+                    <p class="mb-auto"> 목록이 없습니다. </p>
+                </div>
+            </div>
+       </div>
+
+        <!-- 페이징처리 시작 -->
+        <div th:if="${!paging.isEmpty()}"
+             th:with="start=${pageMaker.startPage}, end=${pageMaker.endPage}" >
+            <ul class="pagination pagination justify-content-center">
+                <li class="page-item"  th:if="${pageMaker.prev}">
+                    <a class="page-link" href="#" th:onclick="'javascript:movePage(1)'" th:text="'<<'"></a></li>
+                </li>
+                <li class="page-item" th:if="${pageMaker.prev}" >
+                    <a class="page-link" href="#" th:onclick="'javascript:movePage('+${start - 1}+')'" th:text="'<'"></a>
+                </li>
+                <li class="page-item" th:each="page: ${#numbers.sequence(start, end)}"
+                    th:classappend="${page == paging.number+1} ? 'active'">
+                    <a class="page-link" href="#" th:text="${page}" th:onclick="'javascript:movePage('+${page}+')'" ></a></li>
+                </li>
+                <li class="page-item" th:if="${pageMaker.next}">
+                    <a class="page-link" href="#" th:onclick="'javascript:movePage('+${start + pageMaker.maxPage}+')'" th:text="'>'"></a>
+                </li>
+
+                <li class="page-item" th:if="${pageMaker.next}">
+                    <a class="page-link" href="#" th:onclick="'javascript:movePage('+${pageMaker.realEndPage}+')'" th:text="'>>'"></a></li>
+                </li>
+            </ul>
+
+        </div> <!-- /페이징처리 -->
+
+        <!--검색 -->
+        <div class="d-flex justify-content-center mt-3" >
+            <form class="col-10 " role="search" id="sfrm" name="sfrm" method="get" th:object="${searchReq}" onsubmit="return false">
+                <div class="input-group">
+                    <select class="form-control col-md-3 mr-2" id="searchCondition" th:field="${searchReq.searchCondition}">
+                        <option value="itemName">상품명</option>
+                        <option value="mid">mid</option>
+                        <option value="keyword">키워드</option>
+                    </select>
+                    <input type="search" class="form-control" aria-label="Search" th:field="${searchReq.searchKeyword}">
+                    <button type="button" class="btn btn-secondary ml-2" onclick="listSearch()">검색</button>
+                </div>
+            </form>
+        </div><!-- /검색 -->
+    </div><!-- /상품조회-->
+    </div>
+</main>
+<div th:replace="fragments/footer :: footer"/>
+
+
+</body>
+<script type="text/javascript" src="/js/param.js" ></script>
+<script th:inline="javascript">
+    //select on change
+    $("#category").change(function(){
+        $("#page").val(1);
+        var form = document.getElementById("frm");
+        form.submit();
+    })
+
+    //순위 갱신하기
+    function getKeyword(itemId){
+        const data = {
+            "itemId": itemId
+        };
+
+        $.ajax({
+            url: "/item/getKeyword",
+            type: "POST",
+            dataType: "json", //ajax -> controller
+            contentType: "application/json; charset=utf-8", // controller -> ajax
+            data: JSON.stringify(data), // 넘길 값
+            success: function (result) {
+                //키워드 개수만큼 개별의 요청으로 보내주기
+                for (var i = 0; i < result.length; i++) {
+                    console.log("renewRank keyword : " + result[i].keyword);
+                    console.log("renewRank keywordId : " + result[i].keywordId);
+                    $("#loadingImg"+result[i].keywordId).removeClass('display-none');
+                    renewRank(itemId, result[i].keyword);
+                }
+            },
+            error: function () {
+                alert("error");
+            }
+        });
+    }
+
+    function renewRank(itemId,keyword){
+        const rankData = {
+            "itemId" : itemId,
+            "keyword" : keyword
+        };
+        $.ajax({
+            url: "/item/renewRank",
+            type: "POST",
+            dataType: "json", //ajax -> controller
+            contentType: "application/json; charset=utf-8", // controller -> ajax
+            data: JSON.stringify(rankData), // 넘길 값
+            success: function (result) {
+                var cnt = (result.length < 3) ? result.length : 3; //키워드3개까지만 출력되게끔
+                for(var i=0;i<cnt;i++){
+                    $("#rankKeyword"+result[i].keywordId).text(result[i].keyword);
+                    $("#itemRank"+result[i].keywordId).text(result[i].rank);
+                    $("#loadingImg"+result[i].keywordId).addClass('display-none');
+                }
+                var parsedDate = moment(result[0].renewDate).format('YYYY-MM-DD HH:mm');
+                console.log("parsedDate with moment.js", parsedDate);
+                $("#rankDateArea"+itemId).text(parsedDate);
+            },
+            error: function (request,status,error) {
+                $('.loading').addClass('display-none');
+                console.log(request.responseText);
+                alert(request.responseText);
+            }
+        });
+    }
+
+    //아이템 검색
+    function listSearch(){
+        $("#searchKeyword").val($("#searchKeyword").val());
+        $("#searchType").val($("#searchCondition").val());
+        var form = document.getElementById("sfrm");
+        var pageInput = document.createElement('input');
+        pageInput.setAttribute("type", "hidden");
+        pageInput.setAttribute("name", "page");
+        pageInput.setAttribute("value", "1");
+        form.appendChild(pageInput);
+        form.setAttribute("action", "/item/list");
+        form.submit();
+    }
+
+    //아이템 삭제
+    function deleteItem(itemId){
+        if(confirm("삭제하시겠습니까?")){
+            var page = /*[[${pageMaker.pageNum}]]*/;
+            var delForm = document.createElement("form");
+            var action = "/item/" + itemId +"/delete" +queryString(page);
+            delForm.setAttribute("method","post");
+            delForm.setAttribute("action", action);
+
+            document.body.appendChild(delForm);
+            delForm.submit();
+        }
+    }
+
+    function movePage(page) {
+        location.href = "/item/itemList"+queryString(page);
+    }
+
+</script>
+</html>

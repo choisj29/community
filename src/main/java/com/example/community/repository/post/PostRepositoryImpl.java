@@ -39,7 +39,6 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                         post.title,
                         post.content,
                         post.replies.size(),
-                        post.memberPostLikes.size(),
                         post.viewCount,
                         post.createdTime,
                         post.member.id,

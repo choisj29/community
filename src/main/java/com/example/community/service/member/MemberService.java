@@ -22,7 +22,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class MemberService {
     private final MemberRepository memberRepository;
-    private final FileStore fileStore;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -58,44 +57,16 @@ public class MemberService {
         return memberRepository.findByLoginId(loginId);
     }
 
-    public List<Member> findAll() {
-        return memberRepository.findAll();
-    }
-
-//    public Page<ListMemberDto> search(MemberSearchCondition memberCondition, Pageable pageable) {
-//        return memberRepository.search(memberCondition, pageable);
-//    }
-
+    /**
+     * 회원탈퇴 기능
+     * 탈퇴 시 연관 post, reply, item, rankLog 모두 cascade 삭제
+     * logout
+     * 화면에서 PasswordDto(password)을 입력 받아 본인 계정 확인
+     * password 체크는 controller 진행 => 에러 메세지 출력을 위해
+     */
     @Transactional
-    public MemberDto modify(ModifyMemberDto dto) throws IOException {
-        log.info("dto.getImage() {}", dto.getImage());
-        Member member = memberRepository.findById(dto.getMemberId()).orElseThrow(() -> new RuntimeException("member is null"));
-        //비밀번호 틀림
-        if (!passwordEncoder.matches(dto.getPassword(), member.getPassword())) {
-            return null;
-        }
-        //비밀번호 변경
-        if (dto.getNewPassword() != null) {
-            log.info("modify password in");
-            member.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        }
-        //닉네임 변경, 중복검사
-        if (dto.getName()!=null && !checkNameDuplicate(dto.getName())) {
-            member.setName(dto.getName());
-        }
-        //user image 변경
-        if (dto.getImage() != null) {
-            UploadFileDto imageFile = fileStore.storeFile(dto.getImage());
-            String storedFilename = imageFile.getStoreFileName();
-            log.info("storedFilename {}", storedFilename);
-            member.setImage(storedFilename);
-        }
-        return new MemberDto(member);
-    }
-
-    @Transactional
-    public void delete(Member member) {
-        member.delete();
+    public void withdrawal(Member member) {
+        memberRepository.delete(member);
     }
 
 }

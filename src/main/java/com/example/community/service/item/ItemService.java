@@ -66,13 +66,6 @@ public class ItemService {
 
         List<Object> queue = QueueManager.getQueue(mid, form.getKeyword());
 
-//        switch (queue.get(0).toString()) {
-//            case "no match keyword":
-//                return "[noKeyword]조회된 키워드가 없습니다.";
-//            case "connection error":
-//                return "[noConnection]접속이 원활하지 않습니다.";
-//        }
-
         List<RenewRankForm> itemThreads = mapper.readValue(String.valueOf(queue), new TypeReference<List<RenewRankForm>>(){});
         RenewRankForm resultItem = itemThreads.get(0);
 

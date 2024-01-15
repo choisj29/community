@@ -19,18 +19,16 @@
 <div class="container">
 
     <div class="py-5 text-center">
-        <h2>로그인</h2>
+        <h2>회원 탈퇴</h2>
     </div>
 
-    <form th:action th:object="${loginForm}" method="post">
+    <form id="frm" name="frm" th:action th:object="${withdrawal}" method="post">
         <div th:if="${#fields.hasGlobalErrors()}">
             <p class="field-error" th:each="err : ${#fields.globalErrors()}" th:text="${err}">전체 오류 메시지</p>
         </div>
         <div>
-                <label for="loginId">로그인 ID</label>
-                <input type="text" id="loginId" th:field="*{loginId}" class="form-control"
-                   th:errorclass="field-error">
-            <div class="field-error" th:errors="*{loginId}" />
+                <label for="loginId">ID</label>
+                <input type="text" id="loginId" name="loginId" th:value="${session.loginMember.loginId}" class="form-control" readonly>
         </div>
         <div>
             <label for="password">비밀번호</label>
@@ -43,18 +41,21 @@
 
         <div class="row">
             <div class="col">
-                <button class="w-100 btn btn-primary btn-lg" type="submit">로그인</button>
+                <button class="w-100 btn btn-primary btn-lg" type="button" onclick="withdrawal()">탈퇴</button>
             </div>
-            <div class="col">
-                <button class="w-100 btn btn-secondary btn-lg"
-                        th:onclick="|location.href='@{/members/add}'|"
-                        type="button">회원가입</button>
-            </div>
-
         </div>
 
     </form>
 
 </div> <!-- /container -->
 </body>
+<script th:inline="javascript">
+
+    function withdrawal() {
+        var form = document.getElementById("frm");
+        if(confirm("모든 작성 글과 댓글 및 상품 정보 및 순위 기록들이 즉시 삭제되며 복구가 불가능합니다. 그래도 탈퇴하시겠습니까?")){
+            form.submit();
+        }
+    }
+</script>
 </html>

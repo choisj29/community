@@ -31,12 +31,11 @@ public class ListPostDto {
     private Set<String> tags;
 
     @QueryProjection
-    public ListPostDto(Long postId, String title, String content, int replyCount, int likeCount, int viewCount, LocalDateTime writeTime, Long memberId, String userName, String userImage) {
+    public ListPostDto(Long postId, String title, String content, int replyCount, int viewCount, LocalDateTime writeTime, Long memberId, String userName, String userImage) {
         this.postId = postId;
         this.title = title;
         this.content = content;
         this.replyCount = replyCount;
-        this.likeCount = likeCount;
         this.viewCount = viewCount;
         this.writeTime = writeTime;
         this.memberId = memberId;

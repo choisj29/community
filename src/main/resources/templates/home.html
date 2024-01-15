@@ -20,11 +20,8 @@
             <div class="py-3 text-center">
                 <p>
                     <a class="btn btn-lg btn-secondary" href="/post/list">게시판</a>
+                    <a class="btn btn-lg btn-secondary" href="/members/withdrawal" th:if="${session.loginMember != null}">회원탈퇴</a>
                 </p>
-<!--                <p>-->
-<!--                    <a class="btn btn-lg btn-secondary" href="/item/itemSave">랭킹추적</a>-->
-<!--                    <a class="btn btn-lg btn-secondary" href="/check/view">랭킹추적V2</a>-->
-<!--                </p>-->
             </div>
         </div>
     </div>

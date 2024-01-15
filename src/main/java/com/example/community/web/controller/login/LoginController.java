@@ -57,7 +57,7 @@ public class LoginController {
         return "redirect:" + redirectURL;
     }
 
-    @PostMapping("/logout")
+    @GetMapping("/logout")
     public String logout(HttpServletRequest request, HttpServletResponse response){
         //세션이 있으면 있는 생성 반환, 없다면 null 반환 request.getSession(false)
         HttpSession session = request.getSession(false);

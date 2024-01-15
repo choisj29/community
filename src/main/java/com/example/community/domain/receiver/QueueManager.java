@@ -18,7 +18,6 @@ import java.util.*;
 public class QueueManager {
 
     public static List<Object> getQueue(String mid, String keyword) throws IOException, InterruptedException {
-        log.info("getQueue in ---");
         List<Object> returnObj = new ArrayList<>();
         //make a client socket
         Socket socket = new Socket();
@@ -52,7 +51,7 @@ public class QueueManager {
         JSONObject jsonObject = new JSONObject(itemList); //[mid, keywords]
         log.info("getQueue jsonObject {}", jsonObject);
         //send data to server
-        PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream())); // send to client
+        PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
         out.println(jsonObject.toString());
         out.flush();
 
@@ -72,7 +71,7 @@ public class QueueManager {
                 String itemName = (String) returnJsonObj.get("item_name");
                 String resultImgURL = (String) returnJsonObj.get("img_url");
                 String renewDate = String.valueOf(LocalDateTime.now());
-                HashMap<String, String> map = new HashMap<>(); //TODO stream().map 으로 리팩토링
+                HashMap<String, String> map = new HashMap<>();
                 map.put("rank", resultRank);
                 map.put("itemName", itemName);
                 map.put("imgLink", resultImgURL);

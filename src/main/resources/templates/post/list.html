@@ -20,19 +20,19 @@
                     <th style="width: 50%;">제목</th>
                     <th>작성자</th>
                     <th>작성일</th>
-                    <th>조회</th>
+<!--                    <th>조회</th>-->
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="post : ${paging}">
-                    <td th:text="${post.postId}"></td>
+                <tr th:each="post, iterStat : ${paging}">
+                    <td th:text="${pageMaker.total - (pageMaker.pageNum * pageMaker.amount) + pageMaker.amount - iterStat.count +1}"></td>
                     <td class="d-flex justify-content-start">
                         <a th:href="@{/post/{postId}(postId=${post.postId})}" th:text="${post.title}" ></a>
                         <div class="ml-1" th:if="${post.replyCount > 0}">(<span th:text="${post.replyCount}"></span>)</div>
                     </td>
                     <td th:text="${post.userName}"></td>
                     <td th:text="${#strings.substring(post.writeTime, 0, 10)}"></td>
-                    <td th:text="${post.viewCount}"></td>
+<!--                    <td th:text="${post.viewCount}"></td>-->
                 </tr>
                 <tr th:if="${pageMaker.total==0}">
                     <td th:colspan="5">게시글이 없습니다.</td>
@@ -74,7 +74,7 @@
 <script th:inline="javascript">
     // 페이지 이동
     function movePage(page) {
-        location.href = "/board/boardList"+ queryString(page);
+        location.href = "/post/list"+queryString(page);
     }
 
     //검색

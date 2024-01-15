@@ -128,8 +128,12 @@
                 console.log("renew rank result empty or not ", result[0].itemName)
                 $('#loading').hide();
                 $('#content').show();
-                $('#savedImgLink').attr('src', result[0].imgLink);
-                $('#savedItemName').text(result[0].itemName);
+                if (result[0].rank > 0) {
+                    $('#savedImgLink').attr('src', result[0].imgLink);
+                    $('#saveItemLink').attr('href', '/item/'+result[0].itemId);
+                    $('#savedItemName').text(result[0].itemName)
+
+                }
                 var span1 = document.createElement('span');
                 span1.setAttribute("class", "");
                 span1.innerHTML = result[0].keyword;

@@ -2,7 +2,6 @@ package com.example.community.domain.post;
 
 
 import com.example.community.domain.member.Member;
-import com.example.community.domain.memberPostLike.MemberPostLike;
 import com.example.community.domain.reply.Reply;
 import com.example.community.global.entity.BaseTimeEntity;
 import com.example.community.web.dto.post.ModifyPostDto;
@@ -35,9 +34,6 @@ public class Post extends BaseTimeEntity{
 
     @OneToMany(mappedBy = "post", cascade = {CascadeType.REMOVE}, orphanRemoval = true)
     private List<Reply> replies = new ArrayList<>();
-
-    @OneToMany(mappedBy = "post", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
-    private List<MemberPostLike> memberPostLikes = new ArrayList<>();
 
     @Builder
     public Post(String title, String content) {

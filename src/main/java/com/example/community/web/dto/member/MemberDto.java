@@ -13,13 +13,10 @@ public class MemberDto {
     private String loginId;
 
     private String name;
-    @ApiParam(value = "member 이미지", required = true)
-    private String image;
 
     public MemberDto(Member member) {
         this.memberId = member.getId();
         this.loginId = member.getLoginId();
         this.name = member.getName();
-        this.image = member.getImage();
     }
 }

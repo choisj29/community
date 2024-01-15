@@ -40,7 +40,7 @@
                             <p th:text="${session.loginMember.name}"></p>
                         </li>
                         <li class="nav-item">
-                            <form th:action="@{/logout}" method="post">
+                            <form th:action="@{/logout}" method="get">
                                 <button class="badge btn-dark" type="submit">
                                     로그아웃
                                 </button>

@@ -2,15 +2,13 @@
 
 function queryString(page){
     var categoryId = $("#category").val();
-    var searchCondition = $("#searchType").val();
+    var searchCondition = $("#searchKey").val();
     var searchKeyword = $("#searchKeyword").val();
-    console.log("movePage categoryName = " + categoryId);
     console.log(page);
     console.log(categoryId);
 
     let queryParams = new Map([
         ['page', (page) ? page : 1],
-        ['categoryId', categoryId],
         ['searchCondition', searchCondition],
         ['searchKeyword', searchKeyword],
     ]);

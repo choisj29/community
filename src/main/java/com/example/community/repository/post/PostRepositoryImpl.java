@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.example.community.domain.member.QMember.member;
 import static com.example.community.domain.post.QPost.post;
 
 
@@ -45,7 +46,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                         post.member.name,
                         post.member.image))
                 .from(post)
-                //.leftJoin(board.member,member)
+                .leftJoin(post.member, member)
                 .where(searchConditionAndKeywordEq(searchReq.getSearchCondition(), searchReq.getSearchKeyword()))
                 .orderBy(post.id.desc())
                 .offset(pageable.getOffset())

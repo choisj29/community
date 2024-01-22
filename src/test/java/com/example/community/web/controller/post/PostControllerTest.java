@@ -42,14 +42,14 @@ class PostControllerTest extends BaseControllerTest {
 
 
     @Test
+    @Commit
     public void 게시글저장테스트() throws Exception{
         //given
-        Member loginMember = loginService.login("test", "test");
+        Member loginMember = loginService.login("test", "Test!1234");
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
-
         SavePostRequest dto = SavePostRequest.builder()
-                .title("title")
+                .title("test")
                 .memberId(loginMember.getId())
                 .name(loginMember.getName())
                 .content("content")
@@ -65,14 +65,14 @@ class PostControllerTest extends BaseControllerTest {
                         .content(json)
         );
         //then
-        resultActions.andDo(print());
+        //resultActions.andDo(print());
 
     }
 
     @Test
     public void 게시글수정테스트() throws Exception{
         //given
-        Member loginMember = loginService.login("test", "test");
+        Member loginMember = loginService.login("test", "Test!1234");
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
 

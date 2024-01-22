@@ -21,7 +21,9 @@ public class QueueManager {
         List<Object> returnObj = new ArrayList<>();
         //make a client socket
         Socket socket = new Socket();
-        String hostName = "127.0.0.1";
+//        String hostName = "127.0.0.1";  //local
+//        String hostName = "3.34.172.42"; //aws
+        String hostName = "101.101.211.172"; //naver
         int port = 9999;
         SocketAddress address = new InetSocketAddress(hostName, port);
         try {

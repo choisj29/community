@@ -49,7 +49,7 @@ public class ItemController {
     @GetMapping("/item/list")
     public String itemList(Model model, ItemSearchReq searchReq,
                            @SessionAttribute(name = SessionConst.LOGIN_MEMBER, required = false) Member member,
-                           @PageableDefault(size=10) Pageable pageable) {
+                           @PageableDefault(size=5) Pageable pageable) {
         int pageNum = pageable.getPageNumber()+1;
         int pageSize = pageable.getPageSize();
         searchReq.setMemberId(member.getId());

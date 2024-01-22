@@ -21,7 +21,7 @@
                     <a class="btn btn-sm btn-dark" href="/item/save">상품등록</a>
                 </div>
             </div>
-            <div class="list-group list-group-flush mb-2" id="thArea" >
+            <div class="list-group list-group-flush mb-2" id="thArea" style="min-height: 550px;">
                 <div class="list-group-item" th:each="item : ${paging}">
                     <div class="row g-0 border rounded overflow-hidden flex-md-row mb-1 shadow-sm h-md-250 position-relative">
                         <div class="col-auto d-none d-lg-block ">
@@ -208,7 +208,7 @@
     }
 
     function movePage(page) {
-        location.href = "/item/itemList"+queryString(page);
+        location.href = "/item/list"+queryString(page);
     }
 
 </script>

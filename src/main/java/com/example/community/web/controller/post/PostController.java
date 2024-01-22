@@ -94,7 +94,7 @@ public class PostController {
 
     //상세페이지 조회수 cron scheduler
     @GetMapping("/post/{postId}")
-    public String boardView(@PathVariable("postId") Long postId,
+    public String postView(@PathVariable("postId") Long postId,
                             @RequestParam(value="page", required = false, defaultValue = "1") int page,
                             Model model,
                             RedirectAttributes redirectAttributes,

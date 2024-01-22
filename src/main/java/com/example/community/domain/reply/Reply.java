@@ -18,10 +18,10 @@ public class Reply {
     @Column(name = "reply_id")
     private Long id;
 
-    private String          content;    //내용
+    private String content;    //내용
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime   writeTime;  //작성시간
-    private boolean isDeleted = false;  //삭제여부
+//    private boolean isDeleted = false;  //삭제여부
     private String name;  //작성자
 
     @ManyToOne(fetch = FetchType.LAZY)

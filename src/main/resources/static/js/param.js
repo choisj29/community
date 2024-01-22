@@ -5,7 +5,6 @@ function queryString(page){
     var searchCondition = $("#searchKey").val();
     var searchKeyword = $("#searchKeyword").val();
     console.log(page);
-    console.log(categoryId);
 
     let queryParams = new Map([
         ['page', (page) ? page : 1],

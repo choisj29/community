@@ -48,23 +48,18 @@
 
         <!--검색 -->
         <div class="d-flex justify-content-center mt-3" >
-            <!--<form class="col-10 " role="search" th:object="${searchForm}" th:action="@{/board/search}" th:method="get" id="frm" name="frm">-->
-            <form class="col-10 " role="search" th:object="${searchReq}" id="frm" name="frm">
+            <form class="col-10 " role="search" id="frm" name="frm" method="get" th:object="${searchReq}" onsubmit="return false">
                 <div class="input-group">
-                    <select class="form-control col-md-3 mr-2" id="searchKey" th:field="*{searchCondition}">
-                        <option value="all" th:selected>제목+내용</option>
-                        <option value="title" th:selected="${searchReq.getSearchCondition() == 'title'}">제목</option>
-                        <option value="content" th:selected="${searchReq.getSearchCondition() == 'content'}">내용</option>
+                    <select class="form-control col-md-3 mr-2" id="searchCondition" th:field="${searchReq.searchCondition}">
+                        <option value="all">제목+내용</option>
+                        <option value="title">제목</option>
+                        <option value="content">내용</option>
                     </select>
-                    <input type="search" class="form-control" aria-label="Search" id="schKeyword" th:field="*{searchKeyword}">
-
+                    <input type="search" class="form-control" aria-label="Search" th:field="${searchReq.searchKeyword}">
                     <button type="button" class="btn btn-secondary ml-2" onclick="listSearch()">검색</button>
                 </div>
-                <input type="hidden" id="page">
             </form>
-            <input type="hidden" id="searchKeyword" th:value="${param.searchKeyword}">
-            <input type="hidden" id="searchCondition" name="searchCondition" th:value="${param.searchCondition}" >
-        </div>
+        </div><!-- /검색 -->
 
 
     </div>
@@ -79,12 +74,14 @@
 
     //검색
     function listSearch(){
-        $("#page").val(1);
-        $("#searchKeyword").val($("#schKeyword").val());
-        $("#searchCondition").val($("#searchKey").val());
-
+        $("#searchKeyword").val($("#searchKeyword").val());
+        $("#searchType").val($("#searchCondition").val());
         var form = document.getElementById("frm");
-        form.setAttribute("method", "get");
+        var pageInput = document.createElement('input');
+        pageInput.setAttribute("type", "hidden");
+        pageInput.setAttribute("name", "page");
+        pageInput.setAttribute("value", "1");
+        form.appendChild(pageInput);
         form.setAttribute("action", "/post/list");
         form.submit();
     }
